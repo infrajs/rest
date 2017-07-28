@@ -15,12 +15,13 @@ class Rest {
 			$path = $p[0];
 			
 			$p = explode('/', $path);
+			$p[sizeof($p) - 1] = '';//Удалили имя файла
 			$dir = implode('/', $p);
 
-			do {
+			while (!Path::theme($dir.'index.php') && sizeof($p) > 1) {
 				array_pop($p);
 				$dir = implode('/', $p).'/';
-			} while (!Path::theme($dir.'index.php') && sizeof($p) > 2);
+			}
 
 			$rest = str_replace($dir, '', $path);
 			
@@ -30,6 +31,7 @@ class Rest {
 	public static function get ($type = false, $fn = false)
 	{
 		$rest = Rest::parse();
+		
 		$right = Sequence::right($rest, '/');
 		$rtype = array_shift($right);
 		if ($rtype != $type) return;
