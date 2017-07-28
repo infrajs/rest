@@ -35,6 +35,6 @@ class Rest {
 		if ($rtype != $type) return;
 		$rest = implode('/', $right);
 		array_unshift($right, $rest);
-		call_user_func_array($fn, $right);
+		return call_user_func_array($fn, $right);
 	}
 }
