@@ -3,6 +3,7 @@ namespace infrajs\rest;
 use infrajs\ans\Ans;
 use infrajs\path\Path;
 use infrajs\once\Once;
+use infrajs\each\Each;
 use infrajs\sequence\Sequence;
 
 class Rest {
@@ -15,28 +16,92 @@ class Rest {
 			$path = $p[0];
 			
 			$p = explode('/', $path);
-			$p[sizeof($p) - 1] = '';//Удалили имя файла
-			$dir = implode('/', $p);
 
-			while (!Path::theme($dir.'index.php') && sizeof($p) > 1) {
+			foreach ($p as $k=>$v) {
+				if (strlen($v) == 0) unset($p[$k]);
+			}
+			$dir = implode('/', $p);
+			$path = $dir;
+			
+
+			while (!Path::theme($dir.'/index.php') && sizeof($p) > 1) {
 				array_pop($p);
-				$dir = implode('/', $p).'/';
+				$dir = implode('/', $p);
 			}
 
-			$rest = str_replace($dir, '', $path);
-			
-			return $rest;
+			//array_pop($p);
+			$root = implode('/', $p);
+			$query = str_replace($dir, '', $path);
+
+			$query = preg_replace('/^\/*/','', $query);
+
+			return ['query'=>$query, 'root'=>$root];
 		}, array($_SERVER['REQUEST_URI']));
 	}
-	public static function get ($type = false, $fn = false)
+	public static function getQuery() {
+		$res = Rest::parse();
+		return $res['query'];
+	}
+	public static function getRoot() {
+		$res = Rest::parse();
+		return $res['root'];
+	}
+	public static function get ($values)
+	{
+		if (!is_array($values)) $values = func_get_args();
+		$rest = Rest::getQuery().'/';
+
+		$rest = Sequence::right($rest, '/');
+		return Rest::_get($values, $rest);
+		
+	}
+	public static function _get ($values, $rest = []) {
+		$query = Rest::getQuery();
+		$right = Sequence::right($query, '/');
+		$len = sizeof($values);
+		if (!($len % 2)) { //Чётное и в конце массив для любого значения
+			$root = array_shift($values);
+			$inner = array_pop($values);
+			$values = array_reverse($values);
+			array_push($values, $inner);
+			array_push($values, false);  //-
+			array_push($values, $root);
+			array_push($values, true);	//-/-
+		} else {
+			
+			$root = array_shift($values);
+			$values = array_reverse($values);
+			array_push($values, $root);
+			array_push($values, true);
+		}
+		$ar = array_chunk($values, 2);
+		
+		foreach ($ar as $obj) {
+			$val = $obj[0];
+			$key = $obj[1];
+			$r = null;
+
+			$exec = $key === true || (isset($rest[0]) && $key === false) || (isset($rest[0]) && $key === $rest[0]);
+			
+			if (!$exec) continue;
+
+			if (is_array($val)) {
+				array_shift($rest);
+				return Rest::_get($val, $rest);
+			} else {
+				return call_user_func_array($val, $right);	
+			}
+		}
+	}
+	/*public static function get ($type, $fn)
 	{
 		$rest = Rest::parse();
 		
 		$right = Sequence::right($rest, '/');
-		$rtype = array_shift($right);
+		$rtype = $right[0];
 		if ($rtype != $type) return;
 		$rest = implode('/', $right);
 		array_unshift($right, $rest);
 		return call_user_func_array($fn, $right);
-	}
+	}*/
 }
