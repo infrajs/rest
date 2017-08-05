@@ -36,6 +36,7 @@ class Rest {
 	}
 	public static function request() 
 	{
+		$url = urldecode($_SERVER['REQUEST_URI']);
 		return Once::exec(__FILE__, function ($query) {		
 			$path = $query;
 			$path = preg_replace('/^\//', '', $path);
@@ -63,7 +64,7 @@ class Rest {
 			$query = preg_replace('/^\/*/','', $query);
 
 			return ['query'=>$query, 'root'=>$root];
-		}, array($_SERVER['REQUEST_URI']));
+		}, array($url));
 	}
 	public static function getQuery() {
 		$res = Rest::request();
