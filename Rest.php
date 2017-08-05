@@ -4,10 +4,37 @@ use infrajs\ans\Ans;
 use infrajs\path\Path;
 use infrajs\once\Once;
 use infrajs\each\Each;
+use infrajs\view\View;
 use infrajs\sequence\Sequence;
+use infrajs\template\Template;
 
 class Rest {
-	public static function parse() 
+	public static function parse($tpl, $data = array(), $root = 'root') {
+		$data['query'] = Rest::getQuery();
+		$data['root'] = Rest::getRoot();
+		$crumbs = Sequence::right($data['query'], '/');
+
+		$data['crumbs'] = array();		
+		$href = $data['root'];
+		foreach ($crumbs as $c) {
+			$href.='/';
+			$href.=$c;
+			$data['crumbs'][] = array(
+				'href' => $href,
+				'title' => $c
+			);
+		};
+		array_unshift($data['crumbs'], array('href'=>$data['root'],"title"=>$data['root']));
+		$data['crumbs'][sizeof($data['crumbs'])-1]['active'] = true;
+
+		$page = Template::parse('-rest/index.tpl', $data, 'page');
+		View::html($page);
+		
+		$html = Template::parse($tpl, $data, $root);
+		View::html($html, 'page');
+		return View::html();
+	}
+	public static function request() 
 	{
 		return Once::exec(__FILE__, function ($query) {		
 			$path = $query;
@@ -39,11 +66,11 @@ class Rest {
 		}, array($_SERVER['REQUEST_URI']));
 	}
 	public static function getQuery() {
-		$res = Rest::parse();
+		$res = Rest::request();
 		return $res['query'];
 	}
 	public static function getRoot() {
-		$res = Rest::parse();
+		$res = Rest::request();
 		return $res['root'];
 	}
 	public static function get ($values)
@@ -95,7 +122,7 @@ class Rest {
 	}
 	/*public static function get ($type, $fn)
 	{
-		$rest = Rest::parse();
+		$rest = Rest::request();
 		
 		$right = Sequence::right($rest, '/');
 		$rtype = $right[0];
