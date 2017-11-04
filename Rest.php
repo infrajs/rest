@@ -28,7 +28,7 @@ class Rest {
 		$data['crumbs'][sizeof($data['crumbs'])-1]['active'] = true;
 
 		$page = Template::parse('-rest/index.tpl', $data, 'page');
-		View::html($page);
+		View::html($page, true);
 		
 		$html = Template::parse($tpl, $data, $root);
 		View::html($html, 'page');
