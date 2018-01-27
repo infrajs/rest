@@ -1,7 +1,6 @@
 {
 	"name": "infrajs/rest",
 	"homepage":"https://github.com/infrajs/rest",
-	"license": "GPL3",
 	"autoload": {
 		"psr-4": { "infrajs\\rest\\": "/" }
 	},
