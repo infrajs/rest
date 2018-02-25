@@ -1,9 +1,7 @@
 <?php
 namespace infrajs\rest;
-use infrajs\ans\Ans;
 use infrajs\path\Path;
 use infrajs\once\Once;
-use infrajs\each\Each;
 use infrajs\view\View;
 use infrajs\sequence\Sequence;
 use infrajs\template\Template;
@@ -59,7 +57,8 @@ class Rest {
 
 			//array_pop($p);
 			$root = implode('/', $p);
-			$query = str_replace($dir, '', $path);
+			$query = substr($path, strlen($dir));
+			//$query = str_replace($dir, '', $path);
 
 			$query = preg_replace('/^\/*/','', $query);
 
@@ -103,7 +102,7 @@ class Rest {
 			array_push($values, true);
 		}
 		$ar = array_chunk($values, 2);
-		
+
 		foreach ($ar as $obj) {
 			$val = $obj[0];
 			$key = $obj[1];
