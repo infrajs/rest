@@ -1,4 +1,4 @@
-Rest = {
+window.Rest = {
 	get: function () {
 		
 	}
