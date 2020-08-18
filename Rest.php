@@ -6,9 +6,12 @@ use infrajs\path\Path;
 use infrajs\view\View;
 use infrajs\sequence\Sequence;
 use infrajs\template\Template;
+use infrajs\cache\CacheOnce;
 
 class Rest
 {
+	public static $name = 'rest';
+	use CacheOnce;
 	public static function parse($tpl, $data = array(), $root = 'root')
 	{
 		$data['query'] = Rest::getQuery();
@@ -35,13 +38,13 @@ class Rest
 		View::html($html, 'page');
 		return View::html();
 	}
-	public static $once = array();
+	// public static $once = array();
 	public static function request()
 	{
 		$query = urldecode($_SERVER['REQUEST_URI']);
 
-		$key = json_encode($query, JSON_UNESCAPED_UNICODE);
-		if (isset(Rest::$once[$key])) return Rest::$once[$key];
+		$key = $query;
+		if (isset(static::$once[$key])) return static::$once[$key];
 
 
 		$path = $query;
@@ -66,7 +69,7 @@ class Rest
 		$query = substr($path, strlen($dir));
 		$query = preg_replace('/^\/*/', '', $query);
 
-		return Rest::$once[$key] = ['query' => $query, 'root' => $root];
+		return static::$once[$key] = ['query' => $query, 'root' => $root];
 	}
 	public static function getQuery()
 	{
@@ -78,11 +81,42 @@ class Rest
 		$res = Rest::request();
 		return $res['root'];
 	}
+	public static function meta() {
+		$res = Rest::request();
+		$data = static::once('meta', $res['root'], function ($root) {
+			$root = Path::theme($root.'/');
+			$json = file_get_contents($root.'meta.json');
+			$data = json_decode($json, true);
+			return $data;
+		});
+		return $data;
+	}
+	
+	public static function first()
+	{
+		$rest = Rest::getQuery() . '/';
+		$rest = Sequence::right($rest, '/');
+		if (isset($rest[0])) return $rest[0];
+		else return '';
+	}
+	public static function second()
+	{
+		$rest = Rest::getQuery() . '/';
+		$rest = Sequence::right($rest, '/');
+		if (isset($rest[1])) return $rest[1];
+		else return '';
+	}
+	public static function third()
+	{
+		$rest = Rest::getQuery() . '/';
+		$rest = Sequence::right($rest, '/');
+		if (isset($rest[2])) return $rest[2];
+		else return '';
+	}
 	public static function get($values)
 	{
 		if (!is_array($values)) $values = func_get_args();
 		$rest = Rest::getQuery() . '/';
-
 		$rest = Sequence::right($rest, '/');
 		return Rest::_get($values, $rest);
 	}
