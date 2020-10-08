@@ -41,7 +41,7 @@ class Rest
 	// public static $once = array();
 	public static function request()
 	{
-		$query = urldecode($_SERVER['REQUEST_URI']);
+		$query = Path::toutf(urldecode($_SERVER['REQUEST_URI']));
 
 		$key = $query;
 		if (isset(static::$once[$key])) return static::$once[$key];
